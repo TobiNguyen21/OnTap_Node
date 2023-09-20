@@ -8,9 +8,12 @@ const compression = require('compression');
 // init middlewares
 app.use(morgan('dev'));     // logger 
 app.use(helmet());          // Helmet helps secure Express apps by setting HTTP response headers.
-app.use(compression());
+app.use(compression());     // nén dữ liệu trả ra
 
 // init db
+require('./dbs/init.mongodb');
+const { checkOverload } = require('./helpers/check.connect');
+checkOverload();
 
 // init routes
 app.get('/', (req, res, next) => {
