@@ -1,9 +1,10 @@
 'use strict'
 
 const mongoose = require('mongoose');
+require('dotenv').config();
 const _MAXPOOL = 50;
 
-const mongoUrl = ''
+const mongoUri = process.env.MONGO_URI;
 
 // Singleton design partern: chỉ khởi tạo một kết nối, gọi 1 lần, những lần sau sẽ dùng cái đã có 
 // || tạo 1 object từ 1 class và chắc chắn rằng chỉ có 1 object đc tạo từ nó
@@ -18,7 +19,7 @@ class Database {
             mongoose.set('debug', { color: true });
         }
 
-        mongoose.connect(mongoUrl, {
+        mongoose.connect(mongoUri, {
             maxPoolSize: _MAXPOOL
         }).then(_ => console.log('Connected Mongodb Success')).catch(err => console.log('Error Connect!'));
     }
