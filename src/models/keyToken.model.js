@@ -10,7 +10,7 @@ const COLLECTION_NAME = 'Keys';
 // Declare the Schema of the Mongo model
 var keyTokenSchema = new mongoose.Schema({
     user: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: mongoose.Types.ObjectId,
         required: true,
         ref: 'Shop'
     },

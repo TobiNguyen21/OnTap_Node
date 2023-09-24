@@ -59,6 +59,13 @@ class AccessService {
         }
     }
 
+    /*
+        1. check email
+        2. save to dbs
+        3. created privateKey, publicKey
+        4. save collection keystore
+        5 .created token pair
+    */
     static signUp = async ({ name, email, password }) => {
         const hodelShop = await ShopModel.findOne({ email }).lean();
         if (hodelShop) {
@@ -72,7 +79,7 @@ class AccessService {
             const privateKey = crypto.randomBytes(64).toString('hex');
             const publicKey = crypto.randomBytes(64).toString('hex')
 
-            console.log({ privateKey, publicKey });
+            //console.log({ privateKey, publicKey });
 
             // save collection keystore
             const keyStore = await keyTokenService.createKeyToken({
@@ -80,6 +87,8 @@ class AccessService {
                 publicKey,
                 privateKey
             });
+
+            //console.log('keytokens:', keyStore);
 
             if (!keyStore) {
                 throw new BadRequestError('keyStore error ');
@@ -96,6 +105,12 @@ class AccessService {
         }
 
         return null;
+    }
+
+    static logout = async (keyStore) => {
+        const delKey = await keyTokenService.removeKeyById(keyStore);
+        console.log({ delKey });
+        return delKey;
     }
 }
 

@@ -3,10 +3,17 @@
 const express = require('express');
 const router = express.Router();
 
-const mainController = require('../../controllers/access.controller');
+const accessController = require('../../controllers/access.controller');
 const asyncHandler = require('../../middleware/async');
+const { authentication } = require('../../auth/authUtils');
 
-router.post('/shop/signup', asyncHandler(mainController.signUp));
-router.post('/shop/login', asyncHandler(mainController.login));
+router.post('/shop/signup', asyncHandler(accessController.signUp));
+router.post('/shop/login', asyncHandler(accessController.login));
+
+// authentication
+router.use(authentication);
+
+router.post('/shop/logout', asyncHandler(accessController.logout));
+
 
 module.exports = router;
