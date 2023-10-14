@@ -5,9 +5,9 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 
 const keyTokenService = require('./keyToken.service');
-const { createTokenPair } = require('../auth/authUtils');
+const { createTokenPair, verifyJWT } = require('../auth/authUtils');
 const { getInfoData } = require('../utils/index');
-const { ConflictRequestError, BadRequestError, AuthFailureError } = require('../core/error.response');
+const { ConflictRequestError, BadRequestError, AuthFailureError, ForbiddenError } = require('../core/error.response');
 
 const { findByEmail } = require('../services/shop.service');
 
@@ -112,6 +112,55 @@ class AccessService {
         console.log({ delKey });
         return delKey;
     }
+
+    /**
+     check this token used ?
+     */
+    static handleRefreshToken = async (refreshToken) => {
+        // check xem token da dc su dung chua
+        const foundToken = await keyTokenService.findByRefreshTokenUsed(refreshToken);
+        // neu co
+        if (foundToken) {
+            // decode token xem day la ai ?
+            const { userId, email } = await verifyJWT(refreshToken, foundToken.privateKey);
+            console.log('payload token [1]:: ', { userId, email });
+            // xoa tat ca token trong keyStore
+            await keyTokenService.deleteKeyById(userId)
+            throw new ForbiddenError(' Something wrong happend !! Pls relogin');
+        }
+
+        // neu ko co
+        const holderToken = await keyTokenService.findByRefreshToken(refreshToken);
+        if (!holderToken) throw new AuthFailureError(' Shop not registed 1');
+
+        // verify Token
+        const { userId, email } = await verifyJWT(refreshToken, holderToken.privateKey);
+        console.log('payload token [2]:: ', { userId, email });
+        // check UserId
+        const foundShop = await findByEmail({ email });
+        if (!foundShop) throw new AuthFailureError(' Shop not registed 2');
+
+        // create 1 cap token moi
+        const tokens = await createTokenPair({ userId, email }, holderToken.publicKey, holderToken.privateKey);
+
+        // update tokens
+        await holderToken.updateOne({
+            $set: {
+                refreshToken: tokens.refreshToken
+            },
+            $addToSet: {
+                refreshTokenUsed: refreshToken
+            }
+        })
+
+        return {
+            user: { userId, email },
+            tokens
+        }
+
+
+    }
+
 }
 
 module.exports = AccessService;
